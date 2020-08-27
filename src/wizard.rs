@@ -1,5 +1,5 @@
 use druid::{
-    widget::{Button, Controller, Flex, Label, TextBox},
+    widget::{Button, Controller, Flex, Label, TextBox, ViewSwitcher},
     Data, Env, Event, EventCtx, Lens, Selector, Widget, WidgetExt,
 };
 use druid_enums::Matcher;
@@ -8,7 +8,8 @@ use crate::Person;
 
 pub const NEXT: Selector = Selector::new("wizard.next");
 pub const BACK: Selector = Selector::new("wizard.back");
-pub const DONE: Selector<Person> = Selector::new("wizard.done");
+pub const FINISH: Selector<Person> = Selector::new("wizard.done");
+pub const QUIT: Selector = Selector::new("wizard.quit");
 
 #[derive(Clone, Data, Lens, Default)]
 pub struct NameState {
@@ -27,12 +28,27 @@ fn name_ui() -> impl Widget<NameState> {
             ctx.submit_command(NEXT, None)
         }
     }
+    fn quit(ctx: &mut EventCtx, _: &mut NameState, _: &Env) {
+        ctx.submit_command(QUIT, None)
+    }
+
+    // Proof-of-concept that we can disable buttons based on step completion ...
+    // Not going to implement for each step because it's jank
+    let next_view_switcher = ViewSwitcher::new(
+        |data: &NameState, _env| data.done(),
+        |done, _data, _env| match done {
+            true => Box::new(Button::new("Next").on_click(next)),
+            false => Box::new(Label::new("Next")),
+        },
+    );
 
     Flex::row()
         .with_child(Label::new("Name"))
         .with_child(TextBox::new().lens(NameState::name))
         .with_spacer(5.0)
-        .with_child(Button::new("Next").on_click(next))
+        //.with_child(Button::new("Next").on_click(next))
+        .with_child(next_view_switcher)
+        .with_child(Button::new("Quit").on_click(quit))
         .center()
 }
 
@@ -74,12 +90,16 @@ fn age_ui() -> impl Widget<AgeState> {
             ctx.submit_command(NEXT, None)
         }
     }
+    fn quit(ctx: &mut EventCtx, _: &mut AgeState, _: &Env) {
+        ctx.submit_command(QUIT, None)
+    }
     Flex::row()
         .with_child(Label::new("Age"))
         .with_child(TextBox::new().lens(AgeState::age))
         .with_spacer(5.0)
         .with_child(Button::new("Back").on_click(back))
         .with_child(Button::new("Next").on_click(next))
+        .with_child(Button::new("Quit").on_click(quit))
         .center()
 }
 
@@ -134,12 +154,16 @@ fn height_ui() -> impl Widget<HeightState> {
             ctx.submit_command(NEXT, None);
         }
     }
+    fn quit(ctx: &mut EventCtx, _: &mut HeightState, _: &Env) {
+        ctx.submit_command(QUIT, None)
+    }
     Flex::row()
         .with_child(Label::new("Height"))
         .with_child(TextBox::new().lens(HeightState::height))
         .with_spacer(5.0)
         .with_child(Button::new("Back").on_click(back))
         .with_child(Button::new("Done").on_click(next))
+        .with_child(Button::new("Quit").on_click(quit))
         .center()
 }
 
@@ -162,7 +186,7 @@ impl Wizard {
             Wizard::Name(name_state) => *self = Wizard::Age(AgeState::from(name_state.clone())),
             Wizard::Age(age_state) => *self = Wizard::Height(HeightState::from(age_state.clone())),
             Wizard::Height(height_state) => {
-                ctx.submit_command(DONE.with(Person::from(height_state.clone())), None)
+                ctx.submit_command(FINISH.with(Person::from(height_state.clone())), None)
             }
         }
     }

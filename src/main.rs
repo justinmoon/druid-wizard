@@ -65,9 +65,19 @@ impl AppDelegate<App> for Delegate {
         _env: &Env,
     ) -> bool {
         println!("delegate: {:?}", cmd);
-        if let Some(person) = cmd.get(wizard::DONE) {
+        if let Some(person) = cmd.get(wizard::FINISH) {
             *data = App::Main(MainState {
                 person: person.clone(),
+            });
+        }
+        if cmd.is(wizard::QUIT) {
+            *data = App::Main(MainState {
+                // FIXME
+                person: Person {
+                    name: "".to_string(),
+                    age: "".to_string(),
+                    height: "".to_string(),
+                },
             });
         }
         true
