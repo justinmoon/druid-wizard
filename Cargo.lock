@@ -266,10 +266,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "druid-enums"
+version = "0.1.0"
+source = "git+https://github.com/Finnerale/druid-enums.git#4e96181d740b86476e3ca4117fa066522d2c01e0"
+dependencies = [
+ "heck",
+ "log",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "druid-prototype"
 version = "0.1.0"
 dependencies = [
  "druid",
+ "druid-enums",
+ "log",
 ]
 
 [[package]]
@@ -636,6 +650,15 @@ dependencies = [
  "libc",
  "pango-sys",
  "pkg-config",
+]
+
+[[package]]
+name = "heck"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"
+dependencies = [
+ "unicode-segmentation",
 ]
 
 [[package]]

@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 druid = "0.6"
+druid-enums = { git = "https://github.com/Finnerale/druid-enums.git" }
+log = "0.4.11"
+
