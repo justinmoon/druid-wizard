@@ -7,11 +7,30 @@ use druid_enums::Matcher;
 
 mod wizard;
 
-#[derive(Clone, Data, Lens, Default)]
-struct MainState {}
+#[derive(Clone, Data, Lens)]
+pub struct Person {
+    name: String,
+    age: String,
+    height: String,
+}
+
+#[derive(Clone, Data, Lens)]
+struct MainState {
+    person: Person,
+}
 
 fn main_ui() -> impl Widget<MainState> {
-    Flex::row().with_child(Label::new("Main")).center()
+    Flex::row()
+        .with_child(Label::dynamic(|data: &MainState, _env| {
+            format!("Name: {}", data.person.name)
+        }))
+        .with_child(Label::dynamic(|data: &MainState, _env| {
+            format!("Age: {}", data.person.age)
+        }))
+        .with_child(Label::dynamic(|data: &MainState, _env| {
+            format!("Height: {}", data.person.height)
+        }))
+        .center()
 }
 
 #[derive(Clone, Data, Matcher)]
@@ -46,8 +65,10 @@ impl AppDelegate<App> for Delegate {
         _env: &Env,
     ) -> bool {
         println!("delegate: {:?}", cmd);
-        if cmd.is(wizard::DONE) {
-            *data = App::Main(MainState {});
+        if let Some(person) = cmd.get(wizard::DONE) {
+            *data = App::Main(MainState {
+                person: person.clone(),
+            });
         }
         true
     }
