@@ -11,6 +11,28 @@ pub const BACK: Selector = Selector::new("wizard.back");
 pub const FINISH: Selector<Person> = Selector::new("wizard.done");
 pub const QUIT: Selector = Selector::new("wizard.quit");
 
+macro_rules! wizard_next {
+    ( $struct:ty ) => {
+        |ctx: &mut EventCtx, state: &mut $struct, _: &Env| {
+            if state.done() {
+                ctx.submit_command(NEXT, None)
+            }
+        }
+    };
+}
+
+macro_rules! wizard_quit {
+    ( $struct:ty ) => {
+        |ctx: &mut EventCtx, _state: &mut $struct, _: &Env| ctx.submit_command(QUIT, None)
+    };
+}
+
+macro_rules! wizard_back {
+    ( $struct:ty ) => {
+        |ctx: &mut EventCtx, _state: &mut $struct, _: &Env| ctx.submit_command(BACK, None)
+    };
+}
+
 #[derive(Clone, Data, Lens, Default)]
 pub struct NameState {
     name: String,
@@ -23,21 +45,12 @@ impl NameState {
 }
 
 fn name_ui() -> impl Widget<NameState> {
-    fn next(ctx: &mut EventCtx, state: &mut NameState, _: &Env) {
-        if state.done() {
-            ctx.submit_command(NEXT, None)
-        }
-    }
-    fn quit(ctx: &mut EventCtx, _: &mut NameState, _: &Env) {
-        ctx.submit_command(QUIT, None)
-    }
-
     // Proof-of-concept that we can disable buttons based on step completion ...
     // Not going to implement for each step because it's jank
     let next_view_switcher = ViewSwitcher::new(
         |data: &NameState, _env| data.done(),
         |done, _data, _env| match done {
-            true => Box::new(Button::new("Next").on_click(next)),
+            true => Box::new(Button::new("Next").on_click(wizard_next!(NameState))),
             false => Box::new(Label::new("Next")),
         },
     );
@@ -48,7 +61,7 @@ fn name_ui() -> impl Widget<NameState> {
         .with_spacer(5.0)
         //.with_child(Button::new("Next").on_click(next))
         .with_child(next_view_switcher)
-        .with_child(Button::new("Quit").on_click(quit))
+        .with_child(Button::new("Quit").on_click(wizard_quit!(NameState)))
         .center()
 }
 
@@ -82,24 +95,13 @@ impl AgeState {
 }
 
 fn age_ui() -> impl Widget<AgeState> {
-    fn back(ctx: &mut EventCtx, _: &mut AgeState, _: &Env) {
-        ctx.submit_command(BACK, None)
-    }
-    fn next(ctx: &mut EventCtx, state: &mut AgeState, _: &Env) {
-        if state.done() {
-            ctx.submit_command(NEXT, None)
-        }
-    }
-    fn quit(ctx: &mut EventCtx, _: &mut AgeState, _: &Env) {
-        ctx.submit_command(QUIT, None)
-    }
     Flex::row()
         .with_child(Label::new("Age"))
         .with_child(TextBox::new().lens(AgeState::age))
         .with_spacer(5.0)
-        .with_child(Button::new("Back").on_click(back))
-        .with_child(Button::new("Next").on_click(next))
-        .with_child(Button::new("Quit").on_click(quit))
+        .with_child(Button::new("Back").on_click(wizard_back!(AgeState)))
+        .with_child(Button::new("Next").on_click(wizard_next!(AgeState)))
+        .with_child(Button::new("Quit").on_click(wizard_quit!(AgeState)))
         .center()
 }
 
@@ -146,24 +148,13 @@ impl From<HeightState> for Person {
 }
 
 fn height_ui() -> impl Widget<HeightState> {
-    fn back(ctx: &mut EventCtx, _: &mut HeightState, _: &Env) {
-        ctx.submit_command(BACK, None)
-    }
-    fn next(ctx: &mut EventCtx, state: &mut HeightState, _: &Env) {
-        if state.done() {
-            ctx.submit_command(NEXT, None);
-        }
-    }
-    fn quit(ctx: &mut EventCtx, _: &mut HeightState, _: &Env) {
-        ctx.submit_command(QUIT, None)
-    }
     Flex::row()
         .with_child(Label::new("Height"))
         .with_child(TextBox::new().lens(HeightState::height))
         .with_spacer(5.0)
-        .with_child(Button::new("Back").on_click(back))
-        .with_child(Button::new("Done").on_click(next))
-        .with_child(Button::new("Quit").on_click(quit))
+        .with_child(Button::new("Back").on_click(wizard_back!(HeightState)))
+        .with_child(Button::new("Done").on_click(wizard_next!(HeightState)))
+        .with_child(Button::new("Quit").on_click(wizard_quit!(HeightState)))
         .center()
 }
 
